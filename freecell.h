@@ -10,26 +10,35 @@ typedef struct Deck Deck;
 typedef struct Card Card;
 typedef struct CardShape CardShape;
 
+#define ZONE1_PADDING "\t\t"
 #define ZONE1_SIZE 8
+#define ZONE23_PADDING "\t"
 #define ZONE23_SIZE 4
 #define DECK_CAPACITY 52
 #define SET_CAPACITY 13
 #define CARD_TOP "╭────╮"
 #define CARD_BOTTOM "╰────╯"
-#define CARD_PLACEHOLDER (CardShape){"╭────╮", "│⢠⣒⡄│", "│⠘⠭⠃│", "╰────╯"}
+#define CARD_PLACEHOLDER (CardShape){"╭────╮", "│⢠⣒⡄ │", "│⠘⠭⠃ │", "╰────╯"}
 #define CARD_PLACEHOLDER_EMPTY (CardShape){"╭────╮", "│    │", "│    │", "╰────╯"}
 #define ZONE1_CONTROLS  "QSDFGHJK"
 #define ZONE2_CONTROLS  "AZER"
-#define ZONE3_CONTROLS  "UIOP"
+#define CARD_SHAPES {"♣","♠","♦","♥"}
 
 #include <stdlib.h>
 #include "utils.h"
 
 typedef enum {
+    FAIL,
+    SUCCESS,
+    MOVE_ILLEGAL,
+    DESTINATION_FULL
+} Error;
+
+typedef enum {
     Clubs,
+    Spades,
     Diamonds,
-    Hearts,
-    Spades
+    Hearts
 } Card_Type;
 
 typedef enum {
@@ -69,6 +78,11 @@ struct Deck {
     size_t size, capacity;
     Card *head, *tail;
 };
+
+/**
+ * Initialize game
+ */
+void initGame();
 
 /**
  * Get card number
@@ -154,8 +168,9 @@ Card *cardAt(Deck *deck, size_t i);
  * Move card at the tail from one deck to another
  * @param src Source Deck to move the card from
  * @param dest Destination Deck to move the card to
+ * @return 1 if success, error code if not
  */
-void moveCard(Deck *src, Deck *dest);
+int moveCard(Deck *src, Deck *dest);
 
 /**
  * Test if we can place card1 on top of card2
@@ -171,6 +186,11 @@ bool isCompatible(Card *card1, Card *card2);
  */
 void printCardInfo(Card *card);
 
+/**
+ * Create decks zone
+ * @param zone_size
+ * @return
+ */
 Zone *createZone(size_t zone_size);
 
 /**
@@ -192,5 +212,15 @@ void printZone1(Zone *zone);
  * @param zone
  */
 void printZone23(Zone *zone2, Zone *zone3);
+
+/**
+ * Display all 3 zones
+ * @param zone1
+ * @param zone2
+ * @param zone3
+ */
+void printLayout(Zone *zone1, Zone *zone2, Zone *zone3);
+
+//TODO: check after each move if any card/s can be moved to zone 3
 
 #endif //FREECELL_FREECELL_H

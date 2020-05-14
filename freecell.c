@@ -6,6 +6,73 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
+
+void initGame() {
+
+    srand((unsigned) time(NULL));
+
+    Deck *deck = createDeck(DECK_CAPACITY), *deck2 = createDeck(DECK_CAPACITY);
+    fillInitialDeck(deck);
+//    fillInitialDeck(deck2);
+
+//    shuffleDeck(deck, 10);
+//    shuffleDeck(deck2, 10);
+
+    Zone *zone1 = createZone(ZONE1_SIZE),
+            *zone2 = createZone(ZONE23_SIZE),
+            *zone3 = createZone(ZONE23_SIZE);
+
+    for (int i = 0; i < ZONE1_SIZE; i++) {
+        fillDeckFrom(deck, zone1->decks[i]);
+        zone1->decks[i]->capacity = SET_CAPACITY;
+    }
+
+
+    for (int i = 0; i < ZONE1_SIZE; i++) {
+        if (i < ZONE23_SIZE) {
+            // lowering down the capacity so that all the cards can fit in 2 zones for now
+//            zone2->decks[i]->capacity /= 2;
+            fillDeckFrom(deck2, zone2->decks[i]);
+        } else {
+            // lowering down the capacity so that all the cards can fit in 2 zones for now
+//            zone3->decks[i - ZONE23_SIZE]->capacity /= 2;
+            fillDeckFrom(deck2, zone3->decks[i - ZONE23_SIZE]);
+        }
+
+    }
+
+/*
+
+//    zone1->decks[1]->size = 0;
+//    zone1->decks[3]->size = 0;
+//    zone1->decks[5]->head->next->next = NULL;
+
+//    zone2->decks[1]->size = 0;
+//    zone3->decks[2]->size = 0;
+//    zone2->decks[3]->head->next->next = NULL;
+
+    // removing one card manually to test card moving between decks
+//    zone2->decks[1]->head->next->next->next->next->next = NULL;
+//    zone2->decks[1]->tail = zone2->decks[1]->head->next->next->next->next;
+//    zone2->decks[1]->size--;
+*/
+    printf("\n%zu", zone1->decks[7]->size);
+
+    printLayout(zone1, zone2, zone3);
+
+    getchar();
+
+    // Moving test
+    if (moveCard(zone1->decks[5], zone2->decks[2]) != SUCCESS
+        && moveCard(zone1->decks[2], zone2->decks[0]) != SUCCESS)
+        printf("Move failed");
+
+    printLayout(zone1, zone2, zone3);
+
+    getchar();
+
+}
 
 Deck *createDeck(size_t capacity) {
     Deck *deck = malloc(sizeof(Deck));
@@ -132,7 +199,6 @@ void printCardShape(Card *card) {
            card->cardShape->bottom);
 }
 
-// TODO: return type bool if card added or no
 bool addCard(Card *card, Deck *deck) {
     if (deck->size >= deck->capacity)
         return FALSE;
@@ -190,14 +256,31 @@ Card *cardAt(Deck *deck, size_t i) {
     return p_card;
 }
 
-void moveCard(Deck *src, Deck *dest) {
+//TODO: 1- Check if destination or source is zone 2 or 1, else return MOVE_ILLEGAL,
+// should be done before calling this function, where we know which zone is source or destination
+// 2- case of moving multiple cards at once
+int moveCard(Deck *src, Deck *dest) {
+    // check if destination if full, if so return DESTINATION_FULL
+    if (dest->size == dest->capacity)
+        return DESTINATION_FULL;
 
+    if (!dest->size || isCompatible(src->tail, dest->tail)) {
+        if (!dest->size)
+            dest->head = src->tail;
+        dest->tail = dest->head;
+        dest->size++;
+        cardAt(src, src->size - 2)->next = NULL;
+        src->size--;
+        return SUCCESS;
+    }
+    // update size of 2 decks
+    return FAIL;
 }
 
 bool isCompatible(Card *card1, Card *card2) {
     return ((card1->type < 2 && card2->type >= 2)
             || (card1->type >= 2 && card2->type < 2))
-           && card1->number > card2->number;
+           && card1->number == (card2->number - 1);
 }
 
 Zone *createZone(size_t zone_size) {
@@ -206,7 +289,7 @@ Zone *createZone(size_t zone_size) {
     zone->decks = malloc(sizeof(Deck *) * zone_size);
 
     for (int i = 0; i < zone->size; i++) {
-        zone->decks[i] = createDeck(zone_size == ZONE1_SIZE ? (i < ZONE1_SIZE / 2 ? 7 : 6) : SET_CAPACITY);
+        zone->decks[i] = createDeck(zone_size == ZONE1_SIZE ? (i < ZONE1_SIZE / 2 ? 7 : 6) : 1);
     }
     return zone;
 }
@@ -242,29 +325,30 @@ void printDeck(Deck *deck) {
     free(pCard);
 }
 
-//TODO: placeholder for empty decks
 void printZone1(Zone *zone) {
-
     Card *pCard = NULL;
     Deck *currDeck = NULL;
     int skips[ZONE1_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0},
-            isEmpty[ZONE1_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0}, //Skipping displaying next card
-    newLine = 1;
+            isEmpty[ZONE1_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0},
+            newLine = 1;
     Card *pCards[ZONE1_SIZE];
 
-    for (int i = 0; i < ZONE1_SIZE; i++) {
+    for (size_t i = 0; i < ZONE1_SIZE; i++) {
         pCards[i] = zone->decks[i]->head;
     }
 
-    for (int i = 0; i < 7; i++) {
+    // TODO: change 7 to set capacity
+    for (size_t i = 0; i < 7/*SET_CAPACITY*/; i++) {
+        if (!newLine)
+            continue;
         for (int k = 0; k < 4 && newLine; k++) {
             newLine = 0;
             for (int j = 0; j < ZONE1_SIZE; j++) {
                 if (!j)
-                    printf("\t\t\t");
+                    printf(ZONE1_PADDING);
                 currDeck = zone->decks[j];
 
-                if (currDeck->size == 0)
+                if (!currDeck->size)
                     isEmpty[j] = 1;
 
                 pCard = pCards[j];
@@ -319,7 +403,6 @@ void printZone1(Zone *zone) {
                         }
                         if (pCard->next) {
                             printf("\t%s", CARD_TOP);
-//                            skips[j] = 1;
                         } else
                             printf("\t%s", pCard->cardShape->middle2);
                         break;
@@ -329,11 +412,11 @@ void printZone1(Zone *zone) {
                                 printf("\t%s", CARD_BOTTOM);
                             else
                                 printf("\t    ");
-                            continue;
+                            break;
                         }
                         if (!i && isEmpty[j]) {
                             printf("\t%s", CARD_BOTTOM);
-                            continue;
+                            break;
                         }
                         if (pCard->next) {
                             printf("\t%s", pCard->next->cardShape->middle1);
@@ -350,6 +433,7 @@ void printZone1(Zone *zone) {
                 }
                 fflush(stdout);
             }
+
             printf("\n");
         }
         for (int s = 0; s < ZONE1_SIZE; s++) {
@@ -362,11 +446,12 @@ void printZone1(Zone *zone) {
 
     }
 
-    printf("\t\t\t");
+    printf(ZONE1_PADDING);
     for (int i = 0; i < ZONE1_SIZE; i++) {
         printf("\t  %c ", ZONE1_CONTROLS[i]);
     }
 
+    free(pCard);
 }
 
 void printZone23(Zone *zone2, Zone *zone3) {
@@ -375,7 +460,7 @@ void printZone23(Zone *zone2, Zone *zone3) {
     int skips[ZONE1_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0},
             isEmpty[ZONE1_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0},
             newLine = 1;
-    Card *pCards[ZONE23_SIZE * 2]; /*= malloc(sizeof(Card *) * ZONE1_SIZE);*/
+    Card *pCards[ZONE23_SIZE * 2];
 
     for (int i = 0; i < ZONE23_SIZE * 2; i++) {
         if (i < ZONE23_SIZE)
@@ -384,13 +469,15 @@ void printZone23(Zone *zone2, Zone *zone3) {
             pCards[i] = zone3->decks[i - ZONE23_SIZE]->head;
     }
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 1; i++) {
         for (int k = 0; k < 4 && newLine; k++) {
             newLine = 0;
             for (int j = 0; j < ZONE23_SIZE * 2; j++) {
 
-                if (!j || (j == ZONE23_SIZE))
-                    printf("\t\t");
+                if (!j)
+                    printf(ZONE23_PADDING);
+                else if (j == ZONE23_SIZE)
+                    printf(ZONE23_PADDING ZONE23_PADDING);
 
                 if (j < ZONE23_SIZE)
                     currDeck = zone2->decks[j];
@@ -429,7 +516,8 @@ void printZone23(Zone *zone2, Zone *zone3) {
                     case 1:
                         if (isEmpty[j]) {
                             if (!i)
-                                printf("\t%s", CARD_PLACEHOLDER_EMPTY.middle1);
+                                printf("\t%s",
+                                       j < ZONE23_SIZE ? CARD_PLACEHOLDER_EMPTY.middle1 : CARD_PLACEHOLDER.middle1);
                             else {
                                 printf("\t    ");
                             }
@@ -445,7 +533,8 @@ void printZone23(Zone *zone2, Zone *zone3) {
                     case 2:
                         if (isEmpty[j]) {
                             if (!i)
-                                printf("\t%s", CARD_PLACEHOLDER_EMPTY.middle2);
+                                printf("\t%s",
+                                       j < ZONE23_SIZE ? CARD_PLACEHOLDER_EMPTY.middle2 : CARD_PLACEHOLDER.middle2);
                             else{
                                 printf("\t    ");
                             }
@@ -491,11 +580,23 @@ void printZone23(Zone *zone2, Zone *zone3) {
 
     }
 
-    printf(GO_UP GO_UP"\t\t");
+    printf(ZONE23_PADDING);
     for (int i = 0; i < ZONE23_SIZE * 2; i++) {
         if (i == 4)
-            printf("\t\t    ");
-        printf("\t  %c ", i < ZONE23_SIZE ? ZONE2_CONTROLS[i] : ZONE3_CONTROLS[i - ZONE23_SIZE]);
+            printf(ZONE23_PADDING ZONE23_PADDING);
+        if (i < ZONE23_SIZE)
+            printf("\t  %c ", ZONE2_CONTROLS[i]);
+        else
+            printf("\t  %s ", getType(i - ZONE23_SIZE));
     }
+
+    free(pCard);
+}
+
+void printLayout(Zone *zone1, Zone *zone2, Zone *zone3) {
+    clrscr();
+    printZone23(zone2, zone3);
+    printf("\n\n\n");
+    printZone1(zone1);
 }
 
