@@ -150,6 +150,15 @@ void fillInitialDeck(Deck *deck);
 void fillDeckFrom(Deck *srcDeck, Deck *destDeck);
 
 /**
+ * Get deck from zone by position
+ * @param zone1
+ * @param zone2
+ * @param position
+ * @return deck
+ */
+Deck *getDeck(Zone *zone1, Zone *zone2, char position);
+
+/**
  * Shuffle deck cards order
  * @param deck Deck to shuffle
  * @param times number of shuffles
@@ -159,10 +168,10 @@ void shuffleDeck(Deck *deck, size_t times);
 /**
  * Get Card at position i
  * @param deck Deck to get the card from
- * @param i Card position
+ * @param index Card position
  * @return Card
  */
-Card *cardAt(Deck *deck, size_t i);
+Card *cardAt(Deck *deck, size_t index);
 
 /**
  * Move card at the tail from one deck to another
@@ -171,6 +180,13 @@ Card *cardAt(Deck *deck, size_t i);
  * @return 1 if success, error code if not
  */
 int moveCard(Deck *src, Deck *dest);
+
+/**
+ * Move card without checking rules
+ * @param src
+ * @param dest
+ */
+void plainMoveCard(Deck *src, Deck *dest);
 
 /**
  * Test if we can place card1 on top of card2
@@ -202,6 +218,13 @@ Zone *createZone(size_t zone_size);
 void swap(Card **head, Card *card1, Card *prevCard1, Card *card2, Card *prevCard2);
 
 /**
+ * Fill zone 1 with cards shuffled
+ * @param zone
+ * @param shuffles number of shuffles
+ */
+void fillZone1(Zone *zone, size_t shuffles);
+
+/**
  * Print zone 1
  * @param zone
  */
@@ -220,6 +243,12 @@ void printZone23(Zone *zone2, Zone *zone3);
  * @param zone3
  */
 void printLayout(Zone *zone1, Zone *zone2, Zone *zone3);
+
+/**
+ * Get top deck size from zone
+ * @param zone
+ */
+size_t getTopSize(Zone*zone);
 
 //TODO: check after each move if any card/s can be moved to zone 3
 

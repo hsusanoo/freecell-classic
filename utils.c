@@ -13,6 +13,12 @@ void printr(char *string) {
 void clrscr() {
     system(CLR);
 }
+
+void clearBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
+}
+
 //
 //void wrapEnable() {
 //    printf(TOGGLE_WRAP_ENABLE);

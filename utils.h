@@ -41,6 +41,8 @@ void printr(char *);
  */
 void clrscr();
 
+void clearBuffer();
+
 ///**
 // * Enable console output wrap
 // */

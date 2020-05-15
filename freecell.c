@@ -5,73 +5,43 @@
 #include "freecell.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include <time.h>
 
 void initGame() {
 
+    char src, dest;
+    Deck *src_deck, *dest_deck;
+
     srand((unsigned) time(NULL));
-
-    Deck *deck = createDeck(DECK_CAPACITY), *deck2 = createDeck(DECK_CAPACITY);
-    fillInitialDeck(deck);
-//    fillInitialDeck(deck2);
-
-//    shuffleDeck(deck, 10);
-//    shuffleDeck(deck2, 10);
 
     Zone *zone1 = createZone(ZONE1_SIZE),
             *zone2 = createZone(ZONE23_SIZE),
             *zone3 = createZone(ZONE23_SIZE);
 
-    for (int i = 0; i < ZONE1_SIZE; i++) {
-        fillDeckFrom(deck, zone1->decks[i]);
-        zone1->decks[i]->capacity = SET_CAPACITY;
-    }
-
-
-    for (int i = 0; i < ZONE1_SIZE; i++) {
-        if (i < ZONE23_SIZE) {
-            // lowering down the capacity so that all the cards can fit in 2 zones for now
-//            zone2->decks[i]->capacity /= 2;
-            fillDeckFrom(deck2, zone2->decks[i]);
-        } else {
-            // lowering down the capacity so that all the cards can fit in 2 zones for now
-//            zone3->decks[i - ZONE23_SIZE]->capacity /= 2;
-            fillDeckFrom(deck2, zone3->decks[i - ZONE23_SIZE]);
-        }
-
-    }
-
-/*
-
-//    zone1->decks[1]->size = 0;
-//    zone1->decks[3]->size = 0;
-//    zone1->decks[5]->head->next->next = NULL;
-
-//    zone2->decks[1]->size = 0;
-//    zone3->decks[2]->size = 0;
-//    zone2->decks[3]->head->next->next = NULL;
-
-    // removing one card manually to test card moving between decks
-//    zone2->decks[1]->head->next->next->next->next->next = NULL;
-//    zone2->decks[1]->tail = zone2->decks[1]->head->next->next->next->next;
-//    zone2->decks[1]->size--;
-*/
-    printf("\n%zu", zone1->decks[7]->size);
+    fillZone1(zone1, 30);
 
     printLayout(zone1, zone2, zone3);
 
-    getchar();
+    // TODO: move card depending on use input
+    // Best case scenario
+    while (TRUE) {
+        //Clearing input buffer (aka trailing '\n')
+        printf("\nNext move (src dest): ");
+        scanf("%c %c", &src, &dest);
+        clearBuffer();
 
-    // Moving test
-    if (moveCard(zone1->decks[5], zone2->decks[2]) != SUCCESS
-        && moveCard(zone1->decks[2], zone2->decks[0]) != SUCCESS)
-        printf("Move failed");
+        // Get the trailing '\n'
+        if (src == '0')
+            break;
+        src_deck = getDeck(zone1, zone2, src);
+        dest_deck = getDeck(zone1, zone2, dest);
 
-    printLayout(zone1, zone2, zone3);
+        printf("\nMoving result : %d\n", moveCard(src_deck, dest_deck));
 
-    getchar();
-
+        printLayout(zone1, zone2, zone3);
+    }
 }
 
 Deck *createDeck(size_t capacity) {
@@ -107,6 +77,18 @@ void fillDeckFrom(Deck *srcDeck, Deck *destDeck) {
     pCard->next = NULL;
     destDeck->tail = pCard;
     destDeck->size = i;
+}
+
+Deck *getDeck(Zone *zone1, Zone *zone2, char position) {
+    int deck_index = strchr(ZONE1_CONTROLS ZONE2_CONTROLS, position) - (ZONE1_CONTROLS ZONE2_CONTROLS);
+
+    if (deck_index < 0)
+        return NULL;
+
+    if (deck_index < ZONE1_SIZE)
+        return zone1->decks[deck_index];
+
+    return zone2->decks[deck_index - ZONE1_SIZE];
 }
 
 Card *createCard(Card_Type type, Card_number number) {
@@ -242,15 +224,15 @@ void shuffleDeck(Deck *deck, size_t times) {
     deck->tail = cardAt(deck, n - 1);
 }
 
-Card *cardAt(Deck *deck, size_t i) {
-    if (i > deck->size)
+Card *cardAt(Deck *deck, size_t index) {
+    if (index > deck->size)
         return NULL;
 
     Card *p_card = malloc(sizeof(Card));
 
     p_card = deck->head;
 
-    for (int j = 0; j < i; j++) {
+    for (int j = 0; j < index; j++) {
         p_card = p_card->next;
     }
     return p_card;
@@ -265,16 +247,23 @@ int moveCard(Deck *src, Deck *dest) {
         return DESTINATION_FULL;
 
     if (!dest->size || isCompatible(src->tail, dest->tail)) {
-        if (!dest->size)
-            dest->head = src->tail;
-        dest->tail = dest->head;
-        dest->size++;
-        cardAt(src, src->size - 2)->next = NULL;
-        src->size--;
+        plainMoveCard(src, dest);
         return SUCCESS;
     }
     // update size of 2 decks
     return FAIL;
+}
+
+void plainMoveCard(Deck *src, Deck *dest) {
+    if (!dest->size)
+        dest->head = src->tail;
+    dest->tail = src->tail;
+    dest->size++;
+    cardAt(src, src->size - 2)->next = NULL;
+    if (dest->size > 1)
+        cardAt(dest, dest->size - 2)->next = dest->tail;
+    src->tail = cardAt(src, src->size - 2);
+    src->size--;
 }
 
 bool isCompatible(Card *card1, Card *card2) {
@@ -325,6 +314,19 @@ void printDeck(Deck *deck) {
     free(pCard);
 }
 
+void fillZone1(Zone *zone, size_t shuffles) {
+    Deck *deck = createDeck(DECK_CAPACITY);
+    fillInitialDeck(deck);
+
+    shuffleDeck(deck, shuffles);
+
+    for (int i = 0; i < ZONE1_SIZE; i++) {
+        fillDeckFrom(deck, zone->decks[i]);
+        zone->decks[i]->capacity = SET_CAPACITY;
+    }
+
+}
+
 void printZone1(Zone *zone) {
     Card *pCard = NULL;
     Deck *currDeck = NULL;
@@ -332,20 +334,21 @@ void printZone1(Zone *zone) {
             isEmpty[ZONE1_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0},
             newLine = 1;
     Card *pCards[ZONE1_SIZE];
+    size_t max_size = getTopSize(zone);
 
     for (size_t i = 0; i < ZONE1_SIZE; i++) {
         pCards[i] = zone->decks[i]->head;
     }
 
-    // TODO: change 7 to set capacity
-    for (size_t i = 0; i < 7/*SET_CAPACITY*/; i++) {
+    for (size_t i = 0; i < max_size; i++) {
         if (!newLine)
-            continue;
+            break;
         for (int k = 0; k < 4 && newLine; k++) {
             newLine = 0;
             for (int j = 0; j < ZONE1_SIZE; j++) {
                 if (!j)
                     printf(ZONE1_PADDING);
+
                 currDeck = zone->decks[j];
 
                 if (!currDeck->size)
@@ -354,11 +357,12 @@ void printZone1(Zone *zone) {
                 pCard = pCards[j];
 
                 if (!pCard && !isEmpty[j]) {
-                    if (k == 3)                     // Not print new line only if bottom of card is displayed
+                    if (k == (max_size / 2))    // Not print new line when all cards are printed
                         newLine = 0;
                     printf("\t    ");
                     continue;
                 }
+
                 newLine = 1;
 
                 switch (k) {
@@ -600,3 +604,11 @@ void printLayout(Zone *zone1, Zone *zone2, Zone *zone3) {
     printZone1(zone1);
 }
 
+size_t getTopSize(Zone *zone) {
+    size_t max = 0;
+    for (int i = 0; i < zone->size; i++) {
+        if (zone->decks[i]->size > max)
+            max = zone->decks[i]->size;
+    }
+    return max;
+}
