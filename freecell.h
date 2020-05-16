@@ -22,7 +22,6 @@ typedef struct CardShape CardShape;
 #define CARD_PLACEHOLDER_EMPTY (CardShape){"╭────╮", "│    │", "│    │", "╰────╯"}
 #define ZONE1_CONTROLS  "QSDFGHJK"
 #define ZONE2_CONTROLS  "AZER"
-#define CARD_SHAPES {"♣","♠","♦","♥"}
 
 #include <stdlib.h>
 #include "utils.h"
@@ -91,6 +90,13 @@ int initGame();
  * @return 1 for starting new game, else 0
  */
 int askNewGame();
+
+/**
+ * Ckeck if the user won the game
+ * @param zone3
+ * @return
+ */
+bool isGameWon(Zone *zone3);
 
 /**
  * Printing game won message
@@ -297,7 +303,5 @@ void printLayout(Zone *zone1, Zone *zone2, Zone *zone3);
  * @param zone
  */
 size_t getTopSize(Zone *zone);
-
-//TODO: check after each move if any card/s can be moved to zone 3
 
 #endif //FREECELL_FREECELL_H

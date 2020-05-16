@@ -9,10 +9,13 @@
 #include <assert.h>
 #include <time.h>
 
+char assist_mode;
+
 int initGame() {
 
-    char src, dest;
+    char src, dest;             // User input
     int move_result = SUCCESS;
+    assist_mode = '0';
     Deck *src_deck, *dest_deck;
 
     srand((unsigned) time(NULL));
@@ -21,11 +24,23 @@ int initGame() {
             *zone2 = createZone(ZONE23_SIZE),
             *zone3 = createZone(ZONE23_SIZE);
 
-    fillZone1(zone1, 50);
+    fillZone1(zone1, 15);
 
+    while (assist_mode != 'Y' && assist_mode != 'N') {
+        printf("Enable Assist Mode ? (Y/N)");
+        scanf("%c", &assist_mode);
+        clearBuffer();
+    }
 
-    // TODO: move card depending on use input
-    // Best case scenario
+    if (assist_mode == 'Y') {
+#ifndef ASSiSTANT_MODE
+#define ASSISTANT_MODE
+#endif
+    } else {
+#ifdef ASSISTANT_MODE
+#undef ASSISTANT_MODE
+#endif
+    }
     while (TRUE) {
 
         printLayout(zone1, zone2, zone3);
@@ -36,11 +51,16 @@ int initGame() {
                 return 2;
             return 3;
         }
-        printf("\n\n[End game: 0 0]\n");
+
+        printf("\n\n\n\nAssist Mode : %s\n",
+               assist_mode == 'Y'
+               ? ANSI_COLOR_GREEN"Enabled"ANSI_COLOR_RESET
+               : ANSI_COLOR_RED"Disabled"ANSI_COLOR_RESET);
+        printf("[End game: 0 0]\n");
         printf("[New game: 1 1]\n");
+
         printf("Next move (src dest): ");
         scanf("%c %c", &src, &dest);
-        //Clearing input buffer (aka trailing '\n')
         clearBuffer();
 
         if (src == '0')
@@ -63,27 +83,42 @@ int initGame() {
         src_deck = getDeck(zone1, zone2, src);
         dest_deck = getDeck(zone1, zone2, dest);
 
+        if (dest_deck->capacity == 1 && dest_deck->size == 1) {
+            move_result = 0;
+            goto prompt;
+        }
+
         if ((move_result = moveCard(src_deck, dest_deck)) != SUCCESS)
             goto prompt;
+
+        if (isGameWon(zone3))
+            return 1;
     }
 }
 
 int askNewGame() {
     char answer = ' ';
     while (answer != 'Y' && answer != 'N') {
-        printf(GO_UP"New game (Y/N) :");
+        printf("New game (Y/N) :");
         scanf("%c", &answer);
         clearBuffer();
     }
     return answer == 'Y';
 }
 
-void gameWonScreen() {
+bool isGameWon(Zone *zone3) {
+    return zone3->decks[0]->tail && zone3->decks[0]->tail->number == K
+           && zone3->decks[1]->tail && zone3->decks[1]->tail->number == K
+           && zone3->decks[2]->tail && zone3->decks[2]->tail->number == K
+           && zone3->decks[3]->tail && zone3->decks[3]->tail->number == K;
+}
 
+void gameWonScreen() {
+    printg("GAME WON !!\n");
 }
 
 void gameLostScreen() {
-
+    printr("GAME LOST");
 }
 
 int autoCheckCards(Zone *zone1, Zone *zone2, Zone *zone3) {
@@ -95,7 +130,7 @@ int autoCheckCards(Zone *zone1, Zone *zone2, Zone *zone3) {
             moved = 1;
         }
     }
-
+    int result = 0;
     // Checking zone 2
     for (int i = 0; i < ZONE23_SIZE; i++) {
         if (isZone3Compatible(zone2->decks[i], zone3)) {
@@ -111,9 +146,9 @@ int movePossible(Zone *zone1, Zone *zone2) {
     // Zone 1 <-> 2
     for (int i = 0; i < ZONE23_SIZE; i++) {
         for (int j = 0; j < ZONE1_SIZE; j++) {
-            if (isCompatible(zone2->decks[i]->tail, zone1->decks[j]->tail)
-                || !zone1->decks[j]->size
-                || !zone2->decks[i]->size)
+            if (!zone1->decks[j]->size
+                || !zone2->decks[i]->size
+                || isCompatible(zone2->decks[i]->tail, zone1->decks[j]->tail))
                 return 1;
         }
     }
@@ -121,10 +156,19 @@ int movePossible(Zone *zone1, Zone *zone2) {
     // inter-Zone 1
     for (int i = 0; i < ZONE1_SIZE; i++) {
         for (int j = 0; j < ZONE23_SIZE; j++) {
-            if (isCompatible(zone1->decks[j]->tail, zone1->decks[i]->tail))
+            if (isCompatible(zone1->decks[j]->tail, zone1->decks[i]->tail)) {
+
+                if (assist_mode == 'Y')  // print in assist mode
+                    printf("\n\nnext possible move : %s %s -> %s %s\n",
+                           getNumber(zone1->decks[j]->tail->number),
+                           getType(zone1->decks[j]->tail->type),
+                           getNumber(zone1->decks[i]->tail->number),
+                           getType(zone1->decks[i]->tail->type));
                 return 1;
+            }
         }
     }
+
     return 0;
 }
 
@@ -333,7 +377,9 @@ int moveCard(Deck *src, Deck *dest) {
     if (!src->size)
         return SOURCE_FULL;
 
-    if ((src->capacity == 1) && (dest->capacity == 1) && src->size && dest->size)   // zone 3 <-> zone 3
+    if ((src->capacity == 1) && (dest->capacity == 1)
+        && src->size && dest->size
+        && (src->tail->type != dest->tail->type))   // zone 2/3 <-> zone 3
         return MOVE_ILLEGAL;
 
     if ((dest->size == dest->capacity) && (dest->capacity != 1))
@@ -461,7 +507,7 @@ void printZone1(Zone *zone) {
                 pCard = pCards[j];
 
                 if (!pCard && !isEmpty[j]) {
-                    if (k == (max_size / 2))    // Not print new line when all cards are printed
+                    if (k == (max_size / 2 + 1))    // Not print new line when all cards are printed
                         newLine = 0;
                     printf("\t    ");
                     continue;

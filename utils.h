@@ -5,8 +5,9 @@
 #ifndef FREECELL_UTILS_H
 #define FREECELL_UTILS_H
 
-// Printing red color
+// Printing color
 #define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN     "\x1b[32m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
 // Moving the cursor one line up
@@ -18,6 +19,7 @@
 
 #define CARD_WIDTH 6
 
+// Clear screen depending on the Operating system
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
 #define CLR "cls"
 #else
@@ -30,27 +32,23 @@ typedef enum {
 } bool;
 
 /**
- * Print in red color
+ * Print in Red
  */
-void printr(char *);
+void printr(char *string);
 
-//TODO: Placeholder for card
+/**
+ * Print in Green
+ */
+void printg(char *string);
 
 /**
  * Clear screen
  */
 void clrscr();
 
+/**
+ * Clear input buffer
+ */
 void clearBuffer();
-
-///**
-// * Enable console output wrap
-// */
-//void wrapEnable();
-//
-///**
-// * Disable console output wrap
-// */
-//void wrapDisable();
 
 #endif //FREECELL_UTILS_H

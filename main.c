@@ -3,6 +3,7 @@
 #include "freecell.h"
 
 int main() {
+
     int gameResult;
 
     start:
@@ -10,13 +11,13 @@ int main() {
 
     switch (gameResult) {
         case 0: // losing game
-            // print losing screen
+            gameLostScreen();
             gameWonScreen();
             if (askNewGame())
                 goto start;
             break;
         case 1: // winning game
-            gameLostScreen();
+            gameWonScreen();
             if (askNewGame())
                 goto start;
             break;
@@ -28,6 +29,5 @@ int main() {
             break;
     }
 
-    exit:
     return 0;
 }
