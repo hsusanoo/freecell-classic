@@ -31,7 +31,8 @@ typedef enum {
     FAIL,
     SUCCESS,
     MOVE_ILLEGAL,
-    DESTINATION_FULL
+    DESTINATION_FULL,
+    SOURCE_FULL
 } Error;
 
 typedef enum {
@@ -81,8 +82,40 @@ struct Deck {
 
 /**
  * Initialize game
+ * @return 0 for losing game, 1 for winning game, 2 for new game, 3 for quitting
  */
-void initGame();
+int initGame();
+
+/**
+ * Prompt asking the user for new game
+ * @return 1 for starting new game, else 0
+ */
+int askNewGame();
+
+/**
+ * Printing game won message
+ */
+void gameWonScreen();
+
+/**
+ * Printing game lost message
+ */
+void gameLostScreen();
+
+/**
+ * Move cards to zone 3 if possible
+ * @param zone1
+ * @param zone2
+ * @param zone3
+ * @return
+ */
+int autoCheckCards(Zone *zone1, Zone *zone2, Zone *zone3);
+
+/**
+ * Check if there are possible moves to do
+ * @return
+ */
+int movePossible(Zone *zone1, Zone *zone2);
 
 /**
  * Get card number
@@ -159,6 +192,13 @@ void fillDeckFrom(Deck *srcDeck, Deck *destDeck);
 Deck *getDeck(Zone *zone1, Zone *zone2, char position);
 
 /**
+ * Get deck index from char
+ * @param position
+ * @return
+ */
+int getDeckIndex(char position);
+
+/**
  * Shuffle deck cards order
  * @param deck Deck to shuffle
  * @param times number of shuffles
@@ -195,6 +235,14 @@ void plainMoveCard(Deck *src, Deck *dest);
  * @return 1 if compatible, else return 0
  */
 bool isCompatible(Card *card1, Card *card2);
+
+/**
+ * Check if the deck's tail can be moved to zone 3
+ * @param deck
+ * @param zone3
+ * @return
+ */
+bool isZone3Compatible(Deck *deck, Zone *zone3);
 
 /**
  * Print card information as string
@@ -248,7 +296,7 @@ void printLayout(Zone *zone1, Zone *zone2, Zone *zone3);
  * Get top deck size from zone
  * @param zone
  */
-size_t getTopSize(Zone*zone);
+size_t getTopSize(Zone *zone);
 
 //TODO: check after each move if any card/s can be moved to zone 3
 
