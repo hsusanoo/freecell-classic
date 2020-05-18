@@ -17,8 +17,6 @@
 #define TOGGLE_WRAP_ENABLE "\x1b[7h"
 #define TOGGLE_WRAP_DISABLE "\x1b[7l"
 
-#define CARD_WIDTH 6
-
 // Clear screen depending on the Operating system
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
 #define CLR "cls"

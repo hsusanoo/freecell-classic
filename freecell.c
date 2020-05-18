@@ -130,7 +130,7 @@ int autoCheckCards(Zone *zone1, Zone *zone2, Zone *zone3) {
             moved = 1;
         }
     }
-    int result = 0;
+
     // Checking zone 2
     for (int i = 0; i < ZONE23_SIZE; i++) {
         if (isZone3Compatible(zone2->decks[i], zone3)) {
@@ -225,11 +225,11 @@ int getDeckIndex(char position) {
 
 Card *createCard(Card_Type type, Card_number number) {
 
-    Card *card = malloc(sizeof(Card *));
+    Card *card = malloc(sizeof(Card));
     card->number = number;
     card->type = type;
     card->next = NULL;
-    card->cardShape = (CardShape *) malloc(sizeof(CardShape *));
+    card->cardShape = (CardShape *) malloc(sizeof(CardShape));
     createCardShape(card);
 
     return card;
@@ -360,9 +360,7 @@ Card *cardAt(Deck *deck, size_t index) {
     if (index > deck->size)
         return NULL;
 
-    Card *p_card = malloc(sizeof(Card));
-
-    p_card = deck->head;
+    Card *p_card = deck->head;
 
     for (int j = 0; j < index; j++) {
         p_card = p_card->next;
@@ -399,7 +397,7 @@ void plainMoveCard(Deck *src, Deck *dest) {
     if (!dest->size)
         dest->head = src->tail;
     dest->tail = src->tail;
-    if (dest->capacity != 1 || ((dest->capacity == 1) && !dest->size))  // Case when destination is zone 3
+    if (dest->capacity != 1 || !dest->size)  // Case when destination is zone 3
         dest->size++;
     if (src->size > 1)
         cardAt(src, src->size - 2)->next = NULL;

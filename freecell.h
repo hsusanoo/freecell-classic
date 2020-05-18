@@ -10,6 +10,7 @@ typedef struct Deck Deck;
 typedef struct Card Card;
 typedef struct CardShape CardShape;
 
+#define CARD_WIDTH 11
 #define ZONE1_PADDING "\t\t"
 #define ZONE1_SIZE 8
 #define ZONE23_PADDING "\t"
