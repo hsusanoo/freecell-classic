@@ -32,15 +32,6 @@ int initGame() {
         clearBuffer();
     }
 
-    if (assist_mode == 'Y') {
-#ifndef ASSiSTANT_MODE
-#define ASSISTANT_MODE
-#endif
-    } else {
-#ifdef ASSISTANT_MODE
-#undef ASSISTANT_MODE
-#endif
-    }
     while (TRUE) {
 
         printLayout(zone1, zone2, zone3);
@@ -220,7 +211,7 @@ Deck *getDeck(Zone *zone1, Zone *zone2, char position) {
 }
 
 int getDeckIndex(char position) {
-    return strchr(ZONE1_CONTROLS ZONE2_CONTROLS, position) - (ZONE1_CONTROLS ZONE2_CONTROLS);
+    return (int) (strchr(ZONE1_CONTROLS ZONE2_CONTROLS, position) - (ZONE1_CONTROLS ZONE2_CONTROLS));
 }
 
 Card *createCard(Card_Type type, Card_number number) {
@@ -229,14 +220,13 @@ Card *createCard(Card_Type type, Card_number number) {
     card->number = number;
     card->type = type;
     card->next = NULL;
-    card->cardShape = (CardShape *) malloc(sizeof(CardShape));
+    card->cardShape = malloc(sizeof(CardShape));
     createCardShape(card);
 
     return card;
 }
 
 char *getNumber(Card_number cardNumber) {
-    char n;
     switch (cardNumber) {
 
         case A:
@@ -368,7 +358,6 @@ Card *cardAt(Deck *deck, size_t index) {
     return p_card;
 }
 
-//TODO: case of moving multiple cards at once
 int moveCard(Deck *src, Deck *dest) {
 
     // Check if destination if full, if so return DESTINATION_FULL

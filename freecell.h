@@ -157,12 +157,6 @@ void createCardShape(Card *card);
 void printCardShape(Card *card);
 
 /**
- * Print deck vertically
- * @param deck
- */
-void printDeck(Deck *deck);
-
-/**
  * Add card to deck
  * @param card Card to add
  * @param deck Deck to add the card to
@@ -250,12 +244,6 @@ bool isCompatible(Card *card1, Card *card2);
  * @return
  */
 bool isZone3Compatible(Deck *deck, Zone *zone3);
-
-/**
- * Print card information as string
- * @param card
- */
-void printCardInfo(Card *card);
 
 /**
  * Create decks zone

@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include <time.h>
 #include "freecell.h"
-#include <string.h>
+
 int main() {
 
     int gameResult;
