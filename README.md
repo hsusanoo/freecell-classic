@@ -2,6 +2,8 @@
 
 Play freecell classic game inside your terminal, only one card can be moved at a time.
 
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/9c35b36aedc049a4bfc5550381d37586)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hsusanoo/freecell-classic&amp;utm_campaign=Badge_Grade)
+
 <p align="center"><img src="/img/demo.gif?raw=true"/></p>
 
 ## Build
